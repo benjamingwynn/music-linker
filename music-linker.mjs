@@ -119,8 +119,10 @@ for (const originalFilePath of found) {
 		}
 	}
 
-	// replace slashes in titles with full-width slashes so they don't mess with the file path
+	// replace slashes in stuff with full-width slashes so they don't mess with the file path
 	title = title.replaceAll("/", "／")
+	album = album.replaceAll("/", "／")
+	artist = artist.replaceAll("/", "／")
 
 	const outPath = path.join(dest, artist, album, (track ? track + ". " + title : title) + ext)
 	await fsp.mkdir(path.resolve(outPath, ".."), {recursive: true})
