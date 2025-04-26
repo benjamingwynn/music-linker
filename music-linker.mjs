@@ -63,6 +63,9 @@ const found = await find(src, [".mp3", ".wav", ".flac", ".m4a"])
 
 let n = 0
 for (const originalFilePath of found) {
+	if (n++ % 10 === 0) {
+		console.log(n, "/", found.length, "(" + ((n / found.length) * 100).toFixed(1) + "%)")
+	}
 	const cmd = `ffprobe -v quiet -print_format json -show_format "${originalFilePath}"`
 	const ffprobe = JSON.parse(await run(cmd))
 
@@ -98,9 +101,6 @@ for (const originalFilePath of found) {
 
 	if (Number.isNaN(+track)) {
 		console.error(originalFilePath, "-", "track # (" + track + ") may not be valid")
-		// console.error("track here looks invalid!")
-		// console.error({dest, artist, album, track, title, ext})
-		// console.error(ffprobe)
 	}
 
 	if (!title) {
@@ -128,19 +128,15 @@ for (const originalFilePath of found) {
 	await fsp.mkdir(path.resolve(outPath, ".."), {recursive: true})
 	if (fs.existsSync(outPath)) {
 		console.error(
-			outPath,
-			"is already linked.",
-			"Not adding:",
-			originalFilePath,
+			"Already have link for",
+			`"${path.relative(dest, outPath)}"`,
+			"- so not adding",
+			`"${path.relative(src, originalFilePath)}"`,
 			"-- you likely have duplicate music, or have already ran against this path"
 		)
 		continue
 	}
 
 	await fsp.link(originalFilePath, outPath)
-	n++
-	if (n % 10 === 0) {
-		console.log(n, "/", found.length, "(" + ((n / found.length) * 100).toFixed(1) + "%)")
-	}
 }
 console.log("complete!")
