@@ -145,7 +145,7 @@ for (const originalFilePath of found) {
 		}
 	}
 
-	const outPath = path.join(dest, artist, album, disc ? "Disc " + disc : ".", (track ? track + ". " + title : title) + ext)
+	const outPath = path.join(dest, artist, album, disc ? "Disc " + disc : ".", (track ? track.padStart(2, "0") + ". " + title : title) + ext)
 	await fsp.mkdir(path.resolve(outPath, ".."), {recursive: true})
 	if (fs.existsSync(outPath)) {
 		moanedAboutExisting++
