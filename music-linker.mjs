@@ -135,6 +135,14 @@ for (const originalFilePath of found) {
 		} else if (discTotal) {
 			disc = disc.split("/")[0] + "／" + discTotal
 		}
+		if (disc === "1／1" || disc === "1") {
+			// remove disc if there's only 1 disc
+			if (!discTotal || discTotal === "1") {
+				disc = null
+			} else {
+				console.log(ffprobe.format.tags)
+			}
+		}
 	}
 
 	const outPath = path.join(dest, artist, album, disc ? "Disc " + disc : ".", (track ? track + ". " + title : title) + ext)
