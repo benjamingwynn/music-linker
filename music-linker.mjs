@@ -61,6 +61,7 @@ if (!src || !dest) {
 
 const found = await find(src, [".mp3", ".wav", ".flac", ".m4a"])
 
+let moanedAboutExisting = 0
 let n = 0
 for (const originalFilePath of found) {
 	if (n++ % 10 === 0) {
@@ -81,6 +82,9 @@ for (const originalFilePath of found) {
 	let album = ffprobe.format.tags.album ?? ffprobe.format.tags.ALBUM ?? ffprobe.format.tags.Album
 	let track = ffprobe.format.tags.track ?? ffprobe.format.tags.TRACK
 	let title = ffprobe.format.tags.title ?? ffprobe.format.tags.TITLE ?? ffprobe.format.tags.Title
+
+	let disc = ffprobe.format.tags.disc ?? ffprobe.format.tags.DISC
+	let discTotal = ffprobe.format.tags.DISCTOTAL
 
 	const ext = path.extname(originalFilePath)
 
@@ -124,19 +128,34 @@ for (const originalFilePath of found) {
 	album = album.replaceAll("/", "／")
 	artist = artist.replaceAll("/", "／")
 
-	const outPath = path.join(dest, artist, album, (track ? track + ". " + title : title) + ext)
+	// fixup disc
+	if (disc) {
+		if (disc.includes("/")) {
+			disc = disc.replaceAll("/", "／")
+		} else if (discTotal) {
+			disc = disc.split("/")[0] + "／" + discTotal
+		}
+	}
+
+	const outPath = path.join(dest, artist, album, disc ? "Disc " + disc : ".", (track ? track + ". " + title : title) + ext)
 	await fsp.mkdir(path.resolve(outPath, ".."), {recursive: true})
 	if (fs.existsSync(outPath)) {
-		console.error(
-			"Already have link for",
-			`"${path.relative(dest, outPath)}"`,
-			"- so not adding",
-			`"${path.relative(src, originalFilePath)}"`,
-			"-- you likely have duplicate music, or have already ran against this path"
-		)
+		moanedAboutExisting++
+		if (moanedAboutExisting === 10) {
+			console.error("(printed this link warning 10 times, not no longer warning about this)")
+		} else if (moanedAboutExisting < 10) {
+			console.error(
+				"Already have link for",
+				`"${path.relative(dest, outPath)}"`,
+				"- so not adding",
+				`"${path.relative(src, originalFilePath)}"`,
+				"-- you likely have duplicate music, or have already ran against this path"
+			)
+		}
 		continue
 	}
 
 	await fsp.link(originalFilePath, outPath)
 }
+console.log(n, "/", found.length, "(" + ((n / found.length) * 100).toFixed(1) + "%)")
 console.log("complete!")
